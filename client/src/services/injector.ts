@@ -1,4 +1,3 @@
-import { ref } from 'vue'
 import type { App } from 'vue'
 import { SipService } from './sip'
 import { SocketService } from './socket'
@@ -8,7 +7,7 @@ export const SocketServiceKey = Symbol('SocketService')
 
 export function createServices() {
   const sipService = new SipService();
-  const socketService = new SocketService('http://your-socket-server.com');
+  const socketService = new SocketService(sipService);
 
   return {
     sipService,

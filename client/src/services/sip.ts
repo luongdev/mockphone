@@ -1,19 +1,34 @@
-import JsSIP from 'jssip'
+import { UA, WebSocketInterface, URI } from 'jssip'
+import { RTCSession } from 'jssip/lib/RTCSession'
 import { ref } from 'vue'
 
+export interface Config {
+  sipUri: string;
+  password: string;
+  websocketUrl: string;
+}
 export class SipService {
-  private ua: JsSIP.UA | null = null
-  private session: JsSIP.RTCSession | null = null
+  private ua: UA | null = null
+  private session: RTCSession | null = null
   public isRegistered = ref(false)
   public isInCall = ref(false)
 
-  private config = ref({});
+  private config: Config | undefined;
 
   constructor() {}
 
-  public init(config: { sipUri: string,  password: string,  websocketUrl: string }) {
-    this.config.value = config;
-    const socket = new JsSIP.WebSocketInterface(config.websocketUrl)
+  public getAgent() {
+    const uri = URI.parse(this.config?.sipUri ?? '');
+
+    return {
+      extension: uri.user,
+      domain: uri.host
+    }
+  }
+
+  public init(config: Config) {
+    this.config = config;
+    const socket = new WebSocketInterface(config.websocketUrl)
     
     const configuration = {
       sockets: [socket],
@@ -22,7 +37,7 @@ export class SipService {
       password: config.password,
     }
 
-    this.ua = new JsSIP.UA(configuration)
+    this.ua = new UA(configuration)
 
     this.ua.on('registered', () => {
       this.isRegistered.value = true

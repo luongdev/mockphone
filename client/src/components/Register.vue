@@ -24,10 +24,10 @@ const domains = ref<Domain[]>([
 ])
 
 const formData = ref<FormData>({
-  proxy: '',
-  username: '',
+  proxy: 'wss://proxy-dev.metechvn.com:7443',
+  username: '1000',
   domain: domains.value[0].name,
-  password: ''
+  password: 'Abcd@54321'
 })
 
 const errors = ref<FormErrors>({
