@@ -9,7 +9,6 @@ import {SocketConfig} from "@configs/socket.config";
     imports: [],
     providers: [
         {
-            // eslint-disable-next-line @typescript-eslint/no-unsafe-assignment
             provide: SocketConfig,
             useFactory: (allConfig: ConfigService<AllConfigType>): SocketConfig => {
                 return allConfig.getOrThrow<SocketConfig>('socket');

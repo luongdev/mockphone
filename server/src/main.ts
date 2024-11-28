@@ -6,13 +6,14 @@ import {WebSocketGateway} from "@nestjs/websockets";
 
 async function bootstrap() {
   const app = await NestFactory.create(AppModule);
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-call
+  app.enableShutdownHooks();
+
   await SocketIoGateway(WebSocketGateway, app);
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument,@typescript-eslint/no-unsafe-assignment
+
   const appConfig = app.get(AppConfig);
 
-
-  // eslint-disable-next-line @typescript-eslint/no-unsafe-argument,@typescript-eslint/no-unsafe-member-access
-  await app.listen(appConfig.port);
+  await app.listen(appConfig.port, '0.0.0.0', () => {
+    console.log(`Server is running on http://0.0.0.0:${appConfig.port}`);
+  });
 }
 bootstrap().catch(console.error);

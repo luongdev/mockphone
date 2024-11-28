@@ -13,7 +13,6 @@ export async function SocketIoGateway(clazz: any, app: INestApplication) {
         adapter = new SocketIoAdapter(app);
     }
 
-    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument,@typescript-eslint/no-unsafe-assignment
     const socketConfig = await app.resolve(SocketConfig);
 
     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument

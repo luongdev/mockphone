@@ -13,14 +13,14 @@ export class SocketService {
   public init(serverUrl: string) {
     const agent = this._sipService.getAgent();
     this.socket = io(serverUrl, {
-      path: '/',
+      path: '/ws',
       autoConnect: true,
       ackTimeout: 500,
       query: {
         extension: agent.extension,
         domain: agent.domain,
       },
-      transports: ['websocket', 'polling'],
+      transports: ['websocket'],
     });
 
     this.socket.on('connect', () => {
@@ -31,9 +31,13 @@ export class SocketService {
       this.isConnected.value = false
     })
 
-    this.socket.on('notification', (message: string) => {
-      this.notifications.value.push(message)
-    })
+    this.socket.on('INCOMING_CALL', (data: any, ack: Function) => {
+      ack({ success: true, message: 'Notification pushed' });
+    });
+
+    this.socket.on('CANCEL', (data: any, ack: Function) => {
+      ack({ success: true, message: 'Cancel pushed' });
+    });
   }
 
   public disconnect() {

@@ -13,7 +13,7 @@ export class SocketConfig {
 export default registerAs<SocketConfig>('socket', () => {
 
     return {
-        path: '/',
+        path: '/ws',
         pingInterval: 10000,
         pingTimeout: 5000,
         namespace: 'default',

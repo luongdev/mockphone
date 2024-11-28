@@ -1,24 +1,30 @@
 import {Injectable} from "@nestjs/common";
-import {Socket} from "socket.io";
+import {AgentSocket} from "@modules/socketio/socketio.type";
 
 
 @Injectable()
 export class SocketIoStore {
-    private readonly _sockets: Map<string, Socket> = new Map<string, Socket>();
+    private readonly _sockets: Map<string, AgentSocket> = new Map<string, AgentSocket>();
 
-    get sockets(): Map<string, Socket> {
+    get sockets(): Map<string, AgentSocket> {
         return this._sockets;
     }
 
-    addSocket(socket: Socket): void {
+    addSocket(socket: AgentSocket): void {
         this._sockets.set(socket.id, socket);
+        if (socket.agent?.length) {
+            this._sockets.set(socket.agent, socket);
+        }
     }
 
-    removeSocket(socket: Socket): void {
+    removeSocket(socket: AgentSocket): void {
         this._sockets.delete(socket.id);
+        if (socket.agent?.length) {
+            this._sockets.delete(socket.agent);
+        }
     }
 
-    getSocket(id: string): Socket | undefined {
+    getSocket(id: string): AgentSocket | undefined {
         return this._sockets.get(id);
     }
 
