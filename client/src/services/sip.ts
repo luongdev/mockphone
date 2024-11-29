@@ -1,8 +1,8 @@
 import { UA, WebSocketInterface, URI } from 'jssip'
 import { RTCSession } from 'jssip/lib/RTCSession'
 import { ref } from 'vue'
-import { router } from '../main';
-
+import { router } from '../main'
+import { CallOptions } from 'jssip/lib/UA';
 export interface Config {
   sipUri: string;
   password: string;
@@ -16,7 +16,7 @@ export class SipService {
 
   private config: Config | undefined;
 
-  constructor() {}
+  constructor() { }
 
   public getAgent() {
     const uri = URI.parse(this.config?.sipUri ?? '');
@@ -50,7 +50,7 @@ export class SipService {
     })
 
     this.ua.on('newRTCSession', ({ session }) => {
-      this.session = session
+      this.session = session as RTCSession;
       
       session.on('accepted', () => {
         this.isInCall.value = true;
@@ -76,21 +76,39 @@ export class SipService {
     this.ua.start()
   }
 
-  public makeCall(number: string, headers?: any) {
+  public async makeCall(number: string, headers?: any) {
     if (!this.ua || !this.isRegistered.value) {
       throw new Error('SIP not registered')
+    }
+
+    let localStream = null;
+    try {
+      localStream = await this._loadCountdownStream();
+    } catch(e) {
+      console.error('Cannot load countdown file', e);
     }
 
     const extraHeaders: string[] = [];
     Object.keys(headers).forEach(k => {
       const header = `X-${k}: ${headers[k]}`;
       extraHeaders.push(header);
-    })
-
+    });
+  
     const options = {
-      mediaConstraints: { audio: true, video: false },
       extraHeaders,
       sessionTimersExpires: 120,
+      mediaConstraints: {
+        preferCurrentTab: true,
+        audio: true,
+        video: false,
+      },
+      pcConfig: { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] },
+    } as CallOptions;
+
+    if (localStream && localStream.active) {
+      options.mediaStream = localStream;
+    } else {
+      
     }
 
     this.session = this.ua.call(number, options);
@@ -114,5 +132,30 @@ export class SipService {
       }
       this.session.answer(options)
     }
+  }
+
+  private async _loadCountdownStream() {
+    const fPath = `/countdown.wav`;
+    const ctx = new AudioContext();
+
+
+    return Promise.resolve()
+    .then(async () => await fetch(fPath))
+    .then(async (res: Response) => await res.arrayBuffer())
+    .then(async (buff: ArrayBuffer) => await ctx.decodeAudioData(buff))
+    .then(async (buff: AudioBuffer) => {
+      const src = ctx.createBufferSource();
+      src.buffer = buff;
+
+      return src;
+    })
+    .then(async (src: AudioBufferSourceNode) => {
+      const dst = ctx.createMediaStreamDestination();
+      src.connect(dst);
+      src.start();
+
+      return dst.stream;
+    })
+    .catch(console.error);
   }
 }
