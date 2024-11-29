@@ -8,6 +8,7 @@ export interface FormData {
   username: string;
   domain: string;
   password: string;
+  autoAnswer: boolean;
 }
 
 interface FormErrors {
@@ -27,7 +28,8 @@ const formData = ref<FormData>({
   proxy: 'wss://proxy-dev.metechvn.com:7443',
   username: '1000',
   domain: domains.value[0].name,
-  password: 'Abcd@54321'
+  password: 'Abcd@54321',
+  autoAnswer: false,
 })
 
 const errors = ref<FormErrors>({
@@ -202,6 +204,19 @@ const handleSubmit = async () => {
               <p v-if="errors.password" class="mt-1 text-sm text-red-600">
                 {{ errors.password }}
               </p>
+            </div>
+          </div>
+
+          <div>
+            <label for="autoAnswer" class="block text-sm font-medium text-gray-700">
+              Auto answer
+            </label>
+            <div class="mt-1">
+              <input
+                id="autoAnswer"
+                v-model="formData.autoAnswer"
+                type="checkbox"
+              >
             </div>
           </div>
         </div>

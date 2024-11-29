@@ -24,6 +24,8 @@ const states = reactive({
   ...props
 })
 
+const sipService = inject<SipService>(SipServiceKey, (null as unknown as SipService));
+
 onMounted(() => {
   const route = useRoute();
   const { phoneNumber, uuid, globalCallId, backend, domain } = route.query ?? {};
@@ -34,9 +36,10 @@ onMounted(() => {
   states.backend = `${backend}`;
   states.globalCallId = `${globalCallId}`;
 
+  if (sipService.autoAnswer) {
+    sipService.makeCall(states.uuid, { backend: states.backend });
+  }
 });
-
-const sipService = inject<SipService>(SipServiceKey, (null as unknown as SipService));
 
 
 const emit = defineEmits<{
@@ -50,9 +53,10 @@ const onAccept = () => {
   });
 }
 
+const onTerminate = () => {
+  sipService.hangup();
+}
 
-
-const callDuration = ref<string>('00:00')
 </script>
 
 <template>

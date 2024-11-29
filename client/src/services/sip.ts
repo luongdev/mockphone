@@ -7,12 +7,16 @@ export interface Config {
   sipUri: string;
   password: string;
   websocketUrl: string;
+  autoAnswer: boolean;
 }
 export class SipService {
   private ua: UA | null = null
   private session: RTCSession | null = null
+  private localStream: MediaStream | null = null;
   public isRegistered = ref(false)
   public isInCall = ref(false)
+  public autoAnswer = ref(false);
+  
 
   private config: Config | undefined;
 
@@ -29,6 +33,7 @@ export class SipService {
 
   public init(config: Config) {
     this.config = config;
+    this.autoAnswer.value = config.autoAnswer;
     
     const socket = new WebSocketInterface(config.websocketUrl)
     
@@ -81,9 +86,8 @@ export class SipService {
       throw new Error('SIP not registered')
     }
 
-    let localStream = null;
     try {
-      localStream = await this._loadCountdownStream();
+      this.localStream = await this._loadCountdownStream();
     } catch(e) {
       console.error('Cannot load countdown file', e);
     }
@@ -105,10 +109,11 @@ export class SipService {
       pcConfig: { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] },
     } as CallOptions;
 
-    if (localStream && localStream.active) {
-      options.mediaStream = localStream;
-    } else {
-      
+    if (this.localStream && this.localStream.active) {
+      options.mediaStream = this.localStream;
+      this.localStream.getAudioTracks()[0].addEventListener("ended", () => {
+        this.session?.terminate();
+      });
     }
 
     this.session = this.ua.call(number, options);
@@ -117,11 +122,17 @@ export class SipService {
     });
 
     return this.session;
-  }
+  }   
 
   public hangup() {
     if (this.session) {
       this.session.terminate()
+      this.session = null;
+    }
+
+    if (this.localStream) {
+      this.localStream.getTracks().forEach((track: MediaStreamTrack) => track.stop());
+      this.localStream = null;
     }
   }
 
@@ -134,7 +145,7 @@ export class SipService {
     }
   }
 
-  private async _loadCountdownStream() {
+  private async _loadCountdownStream(): Promise<MediaStream | null> {
     const fPath = `/countdown.wav`;
     const ctx = new AudioContext();
 
@@ -156,6 +167,9 @@ export class SipService {
 
       return dst.stream;
     })
-    .catch(console.error);
+    .catch(err => {
+      console.error(err);
+      return null;
+    });
   }
 }

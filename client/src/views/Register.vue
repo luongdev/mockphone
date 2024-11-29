@@ -23,6 +23,7 @@ const handleSubmit = (data: FormData) => {
     sipUri: sipUri.toString(),
     password: data.password,
     websocketUrl: data.proxy,
+    autoAnswer: data.autoAnswer,
   });
 }
 
