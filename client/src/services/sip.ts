@@ -1,6 +1,7 @@
 import { UA, WebSocketInterface, URI } from 'jssip'
 import { RTCSession } from 'jssip/lib/RTCSession'
 import { ref } from 'vue'
+import { router } from '../main';
 
 export interface Config {
   sipUri: string;
@@ -28,6 +29,7 @@ export class SipService {
 
   public init(config: Config) {
     this.config = config;
+    
     const socket = new WebSocketInterface(config.websocketUrl)
     
     const configuration = {
@@ -51,28 +53,52 @@ export class SipService {
       this.session = session
       
       session.on('accepted', () => {
-        this.isInCall.value = true
+        this.isInCall.value = true;
+
+        const remote = new MediaStream();
+        session.connection?.getReceivers()?.forEach((receiver: any) => {
+          if (receiver.track) remote.addTrack(receiver.track);
+        });
+  
+        const audioElm = new window.Audio();
+        audioElm.srcObject = remote;
+        audioElm.play().catch(console.error);
       })
       
-      session.on('ended', () => {
+      session.on('ended', async () => {
         this.isInCall.value = false
         this.session = null
+
+        await router.push('/');
       })
     })
 
     this.ua.start()
   }
 
-  public makeCall(number: string) {
+  public makeCall(number: string, headers?: any) {
     if (!this.ua || !this.isRegistered.value) {
       throw new Error('SIP not registered')
     }
 
+    const extraHeaders: string[] = [];
+    Object.keys(headers).forEach(k => {
+      const header = `X-${k}: ${headers[k]}`;
+      extraHeaders.push(header);
+    })
+
     const options = {
-      mediaConstraints: { audio: true, video: false }
+      mediaConstraints: { audio: true, video: false },
+      extraHeaders,
+      sessionTimersExpires: 120,
     }
 
-    this.ua.call(number, options)
+    this.session = this.ua.call(number, options);
+    this.session.on('ended', async () => {
+      await router.push('/');
+    });
+
+    return this.session;
   }
 
   public hangup() {

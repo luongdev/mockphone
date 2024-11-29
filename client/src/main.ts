@@ -9,6 +9,8 @@ import './style.css'
 import App from './App.vue'
 import HomeView from './views/Home.vue';
 import Register from './views/Register.vue';
+import IncomingCall from './components/IncomingCall.vue';
+import OutgoingCall from './components/OutgoingCall.vue';
 
 const pinia = createPinia();
 
@@ -16,9 +18,11 @@ const pinia = createPinia();
 const routes = [
   { path: '/', component: HomeView },
   { path: '/register', component: Register },
+  { path: '/incoming', component: IncomingCall },
+  { path: '/outgoing', component: OutgoingCall },
 ];
 
-const router = createRouter({
+export const router = createRouter({
   history: createMemoryHistory(),
   routes,
 });

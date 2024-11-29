@@ -43,8 +43,8 @@ export class CallController {
         });
     }
 
-    @Delete('cancel')
-    async cancel(
+    @Delete('hangup')
+    async hangup(
         @Body('uuid') uuid: string,
         @Body('domain') domain: string,
         @Body('extension') extension: string,
@@ -58,7 +58,7 @@ export class CallController {
         }
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        return await socket.tryEmit('CANCEL', 3, 200, { uuid, domain, extension, globalCallId, eventTime, timeout });
+        return await socket.tryEmit('HANGUP', 3, 200, { uuid, domain, extension, globalCallId, eventTime, timeout });
     }
 
 }

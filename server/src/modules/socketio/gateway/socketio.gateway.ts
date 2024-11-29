@@ -32,7 +32,8 @@ export class SocketIoGateway
                     const timer = setTimeout(() => {
                         if (!isAcked) reject(new Error('Ack timeout'));
                     }, timeout);
-                    client.emit(event, args, (ack: any) => {
+                    // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
+                    client.emit(event, ...args, (ack: any) => {
                         isAcked = true;
                         clearTimeout(timer);
                         resolve(ack);

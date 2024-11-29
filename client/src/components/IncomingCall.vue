@@ -1,5 +1,8 @@
 <script setup lang="ts">
-import { ref } from 'vue'
+import { ref, onMounted, reactive, inject } from 'vue'
+import { useRoute } from 'vue-router';
+import { SipServiceKey } from '../services/injector';
+import { SipService } from '../services/sip';
 
 interface Props {
   callerName: string;
@@ -13,10 +16,41 @@ const props = withDefaults(defineProps<Props>(), {
   callerAvatar: ''
 })
 
+const states = reactive({ 
+  uuid: '',
+  globalCallId: '',
+  backend: '',
+  domain: '',
+  ...props
+})
+
+onMounted(() => {
+  const route = useRoute();
+  const { phoneNumber, uuid, globalCallId, backend, domain } = route.query ?? {};
+  states.callerName = `${phoneNumber}`;
+  states.callerNumber = `${phoneNumber}`;
+  states.uuid = `${uuid}`;
+  states.domain = `${domain}`;
+  states.backend = `${backend}`;
+  states.globalCallId = `${globalCallId}`;
+
+});
+
+const sipService = inject<SipService>(SipServiceKey, (null as unknown as SipService));
+
+
 const emit = defineEmits<{
   (e: 'accept'): void;
   (e: 'decline'): void;
 }>()
+
+const onAccept = () => {
+  sipService.makeCall(states.uuid, {
+    backend: states.backend,
+  });
+}
+
+
 
 const callDuration = ref<string>('00:00')
 </script>
@@ -28,20 +62,20 @@ const callDuration = ref<string>('00:00')
         <!-- Caller Avatar -->
         <div class="w-24 h-24 rounded-full bg-gray-200 overflow-hidden animate-pulse">
           <img 
-            v-if="callerAvatar" 
-            :src="callerAvatar" 
-            :alt="callerName" 
+            v-if="states.callerAvatar" 
+            :src="states.callerAvatar" 
+            :alt="states.callerName" 
             class="w-full h-full object-cover"
           >
           <div v-else class="w-full h-full flex items-center justify-center bg-gray-300">
-            <span class="text-4xl text-gray-600">{{ callerName[0] }}</span>
+            <span class="text-4xl text-gray-600">{{ states.callerName[0] }}</span>
           </div>
         </div>
 
         <!-- Caller Info -->
         <div class="text-center">
-          <h2 class="text-xl font-semibold">{{ callerName }}</h2>
-          <p class="text-gray-600">{{ callerNumber }}</p>
+          <h2 class="text-xl font-semibold">{{ states.callerName }}</h2>
+          <p class="text-gray-600">{{ states.callerNumber }}</p>
           <p class="text-green-500 mt-2">Incoming Call...</p>
         </div>
 
@@ -57,7 +91,7 @@ const callDuration = ref<string>('00:00')
           </button>
           
           <button 
-            @click="emit('accept')"
+            @click="onAccept"
             class="w-14 h-14 rounded-full bg-green-500 hover:bg-green-600 flex items-center justify-center"
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">
