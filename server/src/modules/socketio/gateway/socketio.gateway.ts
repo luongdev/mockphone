@@ -26,14 +26,14 @@ export class SocketIoGateway
         client.tryEmit = async (event: string, maxTries: number, timeout: number, ...args: any[]): Promise<any> => {
             let tries = 0;
 
-            const emitWithAck = (): Promise<any> => {
+            const emitWithAck = (tries: number): Promise<any> => {
                 return new Promise((resolve, reject) => {
                     let isAcked = false;
                     const timer = setTimeout(() => {
                         if (!isAcked) reject(new Error('Ack timeout'));
                     }, timeout);
                     // eslint-disable-next-line @typescript-eslint/no-unsafe-argument
-                    client.emit(event, ...args, (ack: any) => {
+                    client.emit(event, ...args, { tries, timeout }, (ack: any) => {
                         isAcked = true;
                         clearTimeout(timer);
                         resolve(ack);
@@ -43,7 +43,7 @@ export class SocketIoGateway
 
             while (tries < maxTries) {
                 try {
-                    return await emitWithAck();
+                    return await emitWithAck(tries);
                     // eslint-disable-next-line @typescript-eslint/no-unused-vars
                 } catch (e) {
                     tries++;

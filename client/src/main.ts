@@ -14,7 +14,6 @@ import OutgoingCall from './components/OutgoingCall.vue';
 
 const pinia = createPinia();
 
-
 const routes = [
   { path: '/', component: HomeView },
   { path: '/register', component: Register },
@@ -26,6 +25,11 @@ export const router = createRouter({
   history: createMemoryHistory(),
   routes,
 });
+
+let _mediaStream: MediaStream | null;
+
+export const setMediaStream = (s: MediaStream) => _mediaStream = s;
+export const getMediaStream = () => _mediaStream;
 
 const app = createApp(App);
 app.use(router);

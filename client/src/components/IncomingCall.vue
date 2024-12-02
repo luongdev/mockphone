@@ -1,5 +1,5 @@
 <script setup lang="ts">
-import { ref, onMounted, reactive, inject } from 'vue'
+import { watch, onMounted, reactive, inject, ref } from 'vue'
 import { useRoute } from 'vue-router';
 import { SipServiceKey } from '../services/injector';
 import { SipService } from '../services/sip';
@@ -42,11 +42,6 @@ onMounted(() => {
 });
 
 
-const emit = defineEmits<{
-  (e: 'accept'): void;
-  (e: 'decline'): void;
-}>()
-
 const onAccept = () => {
   sipService.makeCall(states.uuid, {
     backend: states.backend,
@@ -56,6 +51,16 @@ const onAccept = () => {
 const onTerminate = () => {
   sipService.hangup();
 }
+
+const state = ref('Incoming call...')
+
+watch(sipService.isInCall, (inCall: boolean) => {
+  if (inCall) {
+    state.value = 'Incall'
+  } else {
+    state.value = 'Incoming call...'
+  }
+})
 
 </script>
 
@@ -80,13 +85,13 @@ const onTerminate = () => {
         <div class="text-center">
           <h2 class="text-xl font-semibold">{{ states.callerName }}</h2>
           <p class="text-gray-600">{{ states.callerNumber }}</p>
-          <p class="text-green-500 mt-2">Incoming Call...</p>
+          <p class="text-green-500 mt-2">{{ state }}</p>
         </div>
 
         <!-- Action Buttons -->
         <div class="flex space-x-4 mt-6">
           <button 
-            @click="emit('decline')"
+            @click="onTerminate"
             class="w-14 h-14 rounded-full bg-red-500 hover:bg-red-600 flex items-center justify-center"
           >
             <svg xmlns="http://www.w3.org/2000/svg" class="h-6 w-6 text-white" fill="none" viewBox="0 0 24 24" stroke="currentColor">

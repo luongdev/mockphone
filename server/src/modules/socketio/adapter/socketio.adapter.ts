@@ -20,6 +20,16 @@ export class SocketIoAdapter extends IoAdapter {
             // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
             if (socketConfig?.transports?.length) options.transports = socketConfig.transports.split(',');
 
+            if (socketConfig?.pingInterval && socketConfig.pingInterval > 1000) {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+                options.pingInterval = socketConfig.pingInterval;
+            }
+
+            if (socketConfig?.pingTimeout && socketConfig.pingTimeout > 100) {
+                // eslint-disable-next-line @typescript-eslint/no-unsafe-member-access
+                options.pingTimeout = socketConfig.pingTimeout;
+            }
+
         }
 
         return super.createIOServer(0, options);

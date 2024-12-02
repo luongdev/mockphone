@@ -1,8 +1,9 @@
 import { UA, WebSocketInterface, URI } from 'jssip'
 import { RTCSession } from 'jssip/lib/RTCSession'
 import { ref } from 'vue'
-import { router } from '../main'
+import { router, getMediaStream } from '../main'
 import { CallOptions } from 'jssip/lib/UA';
+
 export interface Config {
   sipUri: string;
   password: string;
@@ -12,7 +13,6 @@ export interface Config {
 export class SipService {
   private ua: UA | null = null
   private session: RTCSession | null = null
-  private localStream: MediaStream | null = null;
   public isRegistered = ref(false)
   public isInCall = ref(false)
   public autoAnswer = ref(false);
@@ -68,6 +68,10 @@ export class SipService {
         const audioElm = new window.Audio();
         audioElm.srcObject = remote;
         audioElm.play().catch(console.error);
+
+        setTimeout(() => {
+          this.hangup();
+        }, 18000);
       })
       
       session.on('ended', async () => {
@@ -84,12 +88,6 @@ export class SipService {
   public async makeCall(number: string, headers?: any) {
     if (!this.ua || !this.isRegistered.value) {
       throw new Error('SIP not registered')
-    }
-
-    try {
-      this.localStream = await this._loadCountdownStream();
-    } catch(e) {
-      console.error('Cannot load countdown file', e);
     }
 
     const extraHeaders: string[] = [];
@@ -109,30 +107,26 @@ export class SipService {
       pcConfig: { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] },
     } as CallOptions;
 
-    if (this.localStream && this.localStream.active) {
-      options.mediaStream = this.localStream;
-      this.localStream.getAudioTracks()[0].addEventListener("ended", () => {
-        this.session?.terminate();
-      });
+    const mediaStream = getMediaStream();
+    if (mediaStream) {
+      options.mediaStream = mediaStream;
+      // mediaStream.getTracks().forEach((track) => {
+      //   track.onended = () => {
+      //     console.log('MediaStreamTrack has ended');
+      //   };
+      // });
+      // // mediaStream.getAudioTracks()[0].addEventListener("ended", () => {
+      // //   this.session?.terminate();
+      // // });
     }
 
-    this.session = this.ua.call(number, options);
-    this.session.on('ended', async () => {
-      await router.push('/');
-    });
-
-    return this.session;
+    this.ua.call(number, options);    
   }   
 
   public hangup() {
     if (this.session) {
       this.session.terminate()
       this.session = null;
-    }
-
-    if (this.localStream) {
-      this.localStream.getTracks().forEach((track: MediaStreamTrack) => track.stop());
-      this.localStream = null;
     }
   }
 
@@ -143,33 +137,5 @@ export class SipService {
       }
       this.session.answer(options)
     }
-  }
-
-  private async _loadCountdownStream(): Promise<MediaStream | null> {
-    const fPath = `/countdown.wav`;
-    const ctx = new AudioContext();
-
-
-    return Promise.resolve()
-    .then(async () => await fetch(fPath))
-    .then(async (res: Response) => await res.arrayBuffer())
-    .then(async (buff: ArrayBuffer) => await ctx.decodeAudioData(buff))
-    .then(async (buff: AudioBuffer) => {
-      const src = ctx.createBufferSource();
-      src.buffer = buff;
-
-      return src;
-    })
-    .then(async (src: AudioBufferSourceNode) => {
-      const dst = ctx.createMediaStreamDestination();
-      src.connect(dst);
-      src.start();
-
-      return dst.stream;
-    })
-    .catch(err => {
-      console.error(err);
-      return null;
-    });
   }
 }

@@ -14,10 +14,10 @@ export default registerAs<SocketConfig>('socket', () => {
 
     return {
         path: '/ws',
-        pingInterval: 10000,
-        pingTimeout: 5000,
+        pingInterval: 5000,
+        pingTimeout: 1500,
         namespace: 'default',
-        connectTimeout: 45000,
+        connectTimeout: 10000,
         transports: 'polling,websocket',
         origins: '*:*',
     } as SocketConfig;

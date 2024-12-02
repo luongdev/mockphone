@@ -19,26 +19,51 @@ export class SocketService {
     this.socket = io(serverUrl, {
       path: '/ws',
       autoConnect: true,
-      ackTimeout: 500,
+      ackTimeout: 200,
+
+      reconnection: true,
+      reconnectionAttempts: 3,
+      reconnectionDelay: 1500,
+      reconnectionDelayMax: 2000,
+      timeout: 2000,
+
       query: {
         extension: agent.extension,
         domain: agent.domain,
       },
-      transports: ['websocket'],
+      transports: ['websocket', 'polling'],
     });
+
+    this.socket.io.on('open', () => {
+      console.log('Socket open');
+    });
+
+    this.socket.io.on('ping', () => {
+      console.log('Socket ping', new Date());
+    });
+
+    this.socket.io.on('reconnect', (attempt: number) => {
+      console.log('Socket reconnect: ', attempt);
+    })
 
     this._router = useRouter();
 
 
     this.socket.on('connect', () => {
       this.isConnected.value = true
+      console.log('socket connected');
     })
+
+    this.socket.on('connect_error', (err) => {
+      console.log('Socket connect_error: ' + err.message, new Date());
+    });
 
     this.socket.on('disconnect', () => {
-      this.isConnected.value = false
+      this.isConnected.value = false;
+      console.log('socket disconnected');
     })
 
-    this.socket.on('INCOMING_CALL', async (data: any, ack: Function) => {
+    this.socket.on('INCOMING_CALL', async (data: any, metadata: any, ack: Function) => {
       const {
         uuid,
         domain,
@@ -68,10 +93,10 @@ export class SocketService {
         });
       }
 
-      ack({ success: true, message: 'Notification pushed' });
+      ack({ success: true, message: 'Notification pushed', ...metadata });
     });
 
-    this.socket.on('HANGUP', async (data: any, ack: Function) => {
+    this.socket.on('HANGUP', async (data: any, metadata: any, ack: Function) => {
       const {
         uuid,
         domain,
@@ -94,7 +119,7 @@ export class SocketService {
         });
       }
 
-      ack({ success: true, message: 'Cancel pushed' });
+      ack({ success: true, message: 'Cancel pushed', ...metadata });
     });
   }
 
