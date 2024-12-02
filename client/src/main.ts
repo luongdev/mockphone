@@ -26,11 +26,6 @@ export const router = createRouter({
   routes,
 });
 
-let _mediaStream: MediaStream | null;
-
-export const setMediaStream = (s: MediaStream) => _mediaStream = s;
-export const getMediaStream = () => _mediaStream;
-
 const app = createApp(App);
 app.use(router);
 app.use(pinia);

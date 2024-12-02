@@ -11,7 +11,7 @@ export class SocketIoGateway
     }
 
     afterInit(server: Server): any {
-        console.log(server.path())
+        console.debug('Socket.io gateway initialized under path: ', server.path());
         this._socketStore.clear();
     }
 

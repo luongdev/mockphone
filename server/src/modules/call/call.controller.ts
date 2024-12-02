@@ -11,7 +11,7 @@ export class CallController {
 
     constructor(private readonly _socketStore: SocketIoStore) {
     }
-
+    
     @Post('incoming')
     async incomingCall(
         @Body('uuid') uuid: string,
@@ -30,7 +30,7 @@ export class CallController {
         }
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        return await socket.tryEmit('INCOMING_CALL', 3, 200, {
+        return await socket.tryEmit('INCOMING_CALL', 3, 900, {
             uuid,
             domain,
             direction,
@@ -58,7 +58,7 @@ export class CallController {
         }
 
         // eslint-disable-next-line @typescript-eslint/no-unsafe-return
-        return await socket.tryEmit('HANGUP', 3, 200, { uuid, domain, extension, globalCallId, eventTime, timeout });
+        return await socket.tryEmit('HANGUP', 3, 900, { uuid, domain, extension, globalCallId, eventTime, timeout });
     }
 
 }

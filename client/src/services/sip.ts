@@ -1,8 +1,26 @@
 import { UA, WebSocketInterface, URI } from 'jssip'
 import { RTCSession } from 'jssip/lib/RTCSession'
 import { ref } from 'vue'
-import { router, getMediaStream } from '../main'
+import { router } from '../main'
 import { CallOptions } from 'jssip/lib/UA';
+
+
+const _fetch = async (ctx: AudioContext, dst: MediaStreamAudioDestinationNode, onSrcEnded?: (e: any) => void) => {
+  const fPath = `/countdown.mp3`;
+
+  return Promise.resolve()
+  .then(async () => await fetch(fPath))
+  .then(async (res: Response) => await res.arrayBuffer())
+  .then(async (buff: ArrayBuffer) => await ctx.decodeAudioData(buff))
+  .then(async (buff: AudioBuffer) => {
+    const src = ctx.createBufferSource();
+    src.buffer = buff;
+    src.connect(dst);
+    if (onSrcEnded) src.onended = onSrcEnded;
+    src.start();
+  })
+  .catch(console.error);
+}
 
 export interface Config {
   sipUri: string;
@@ -68,10 +86,6 @@ export class SipService {
         const audioElm = new window.Audio();
         audioElm.srcObject = remote;
         audioElm.play().catch(console.error);
-
-        setTimeout(() => {
-          this.hangup();
-        }, 18000);
       })
       
       session.on('ended', async () => {
@@ -107,18 +121,12 @@ export class SipService {
       pcConfig: { iceServers: [{ urls: "stun:stun.l.google.com:19302" }] },
     } as CallOptions;
 
-    const mediaStream = getMediaStream();
-    if (mediaStream) {
-      options.mediaStream = mediaStream;
-      // mediaStream.getTracks().forEach((track) => {
-      //   track.onended = () => {
-      //     console.log('MediaStreamTrack has ended');
-      //   };
-      // });
-      // // mediaStream.getAudioTracks()[0].addEventListener("ended", () => {
-      // //   this.session?.terminate();
-      // // });
-    }
+    const ctx = new AudioContext();
+    const dst = ctx.createMediaStreamDestination();
+
+    _fetch(ctx, dst, () => this.hangup()).catch(console.error);
+
+    options.mediaStream = dst.stream;
 
     this.ua.call(number, options);    
   }   

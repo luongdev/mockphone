@@ -36,7 +36,7 @@ onMounted(() => {
   states.backend = `${backend}`;
   states.globalCallId = `${globalCallId}`;
 
-  if (sipService.autoAnswer) {
+  if (sipService.autoAnswer.value) {
     sipService.makeCall(states.uuid, { backend: states.backend });
   }
 });
