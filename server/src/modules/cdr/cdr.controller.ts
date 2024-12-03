@@ -26,14 +26,6 @@ export class CdrController {
 
         const waitTime = answerUepoch ? answerUepoch - startUepoch : endUepoch - startUepoch;
 
-        console.log({
-            callId,
-            cause,
-            startUepoch,
-            answerUepoch,
-            endUepoch,
-        })
-
         this._metricsService.recordWaitTime(Math.floor(waitTime / 1000), callId);
 
         if (variables && variables.hangup_cause !== 'NORMAL_CLEARING') {

@@ -8,7 +8,7 @@ interface Props {
   recipientAvatar?: string;
 }
 
-const props = withDefaults(defineProps<Props>(), {
+withDefaults(defineProps<Props>(), {
   recipientName: 'Unknown',
   recipientNumber: '',
   recipientAvatar: ''
@@ -21,7 +21,7 @@ const emit = defineEmits<{
 const callDuration = ref<number>(0)
 const formattedDuration = ref<string>('00:00')
 
-let timer: NodeJS.Timer | undefined
+let timer: any;
 
 const formatTime = (seconds: number): string => {
   const minutes = Math.floor(seconds / 60)

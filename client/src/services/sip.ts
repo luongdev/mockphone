@@ -22,25 +22,6 @@ const _fetch = async (ctx: AudioContext, dst: MediaStreamAudioDestinationNode, o
     .catch(console.error);
 }
 
-const _filterCodecs = async (sdp: string, codec: string) => {
-  const lines = sdp.split('\r\n');
-  const mLineIndex = lines.findIndex((line) => line.startsWith('m=audio'));
-
-  if (mLineIndex !== -1) {
-    const codecRegex = new RegExp(`^a=rtpmap:\\d+ ${codec}`, 'i');
-    const codecLines = lines.filter((line) => codecRegex.test(line));
-    if (codecLines.length > 0) {
-      const codecIds = codecLines.map((line) => line && line?.match(/^a=rtpmap:(\d+)/)[1]);
-      lines[mLineIndex] = lines[mLineIndex]
-        .split(' ')
-        .filter((item, index) => index === 0 || codecIds.includes(item))
-        .join(' ');
-    }
-  }
-
-  return lines.join('\r\n');
-}
-
 export interface Config {
   sipUri: string;
   password: string;
@@ -91,10 +72,10 @@ export class SipService {
       this.isRegistered.value = false
     })
 
-    this.ua.on('newRTCSession', ({ session }) => {
-      this.session = session as RTCSession;
+    this.ua.on('newRTCSession', (rtc: { session: RTCSession }) => {
+      this.session = rtc.session;
 
-      session.on('sdp', async (e: { sdp: string; originator: string; }) => {
+      this.session.on('sdp', async (e: { sdp: string; originator: string; }) => {
         if (e.originator === 'local') {
           // let sdp = e.sdp;
           // sdp = sdp.replace(/m=audio .*\r\n/g, (line) => {
@@ -111,11 +92,11 @@ export class SipService {
         }
       });
 
-      session.on('accepted', () => {
+      this.session.on('accepted', () => {
         this.isInCall.value = true;
 
         const remote = new MediaStream();
-        session.connection?.getReceivers()?.forEach((receiver: any) => {
+        this.session?.connection?.getReceivers()?.forEach((receiver: any) => {
           if (receiver.track) remote.addTrack(receiver.track);
         });
 
@@ -124,7 +105,7 @@ export class SipService {
         audioElm.play().catch(console.error);
       })
 
-      session.on('ended', async () => {
+      this.session.on('ended', async () => {
         this.isInCall.value = false
         this.session = null
 
