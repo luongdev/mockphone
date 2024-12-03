@@ -5,6 +5,7 @@ services:
     build:
       context: ./client
       dockerfile: docker/Dockerfile
+    image: docker-registry.metechvn.com/mock/client
     container_name: client
     ports:
       - "80:80"
@@ -13,6 +14,7 @@ services:
     build:
       context: ./server
       dockerfile: docker/Dockerfile
+    image: docker-registry.metechvn.com/mock/server
     container_name: server
     ports:
       - "3000:3000"
