@@ -39,45 +39,10 @@
 import { ref, inject, onMounted } from "vue";
 import { SocketServiceKey } from "../services/injector";
 import { SocketService } from "../services/socket";
-import { setMediaStream } from '../main';
-
-const _loadCountdownStream = async () => {
-  const fPath = `/countdown.mp3`;
-  const ctx = new AudioContext();
-
-
-  return Promise.resolve()
-  .then(async () => await fetch(fPath))
-  .then(async (res: Response) => await res.arrayBuffer())
-  .then(async (buff: ArrayBuffer) => await ctx.decodeAudioData(buff))
-  .then(async (buff: AudioBuffer) => {
-    const src = ctx.createBufferSource();
-    src.buffer = buff;
-
-    return src;
-  })
-  .then(async (src: AudioBufferSourceNode) => {
-    const dst = ctx.createMediaStreamDestination();
-    src.connect(dst);
-    src.start();
-
-    return dst.stream;
-  })
-  .catch(err => {
-    console.error(err);
-    return null;
-  });
-}
 
 const socketService = inject<SocketService>(SocketServiceKey, (null as unknown as SocketService));
 onMounted(async () => {
   socketService.init('http://localhost:3000');
-  try {
-    const stream = await _loadCountdownStream();
-    setMediaStream(stream as MediaStream);
-  } catch(e) {
-    console.error(e);
-  }
 });
 
 const phoneNumber = ref<string>("");

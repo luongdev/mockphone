@@ -9,17 +9,36 @@ const _fetch = async (ctx: AudioContext, dst: MediaStreamAudioDestinationNode, o
   const fPath = `/countdown.mp3`;
 
   return Promise.resolve()
-  .then(async () => await fetch(fPath))
-  .then(async (res: Response) => await res.arrayBuffer())
-  .then(async (buff: ArrayBuffer) => await ctx.decodeAudioData(buff))
-  .then(async (buff: AudioBuffer) => {
-    const src = ctx.createBufferSource();
-    src.buffer = buff;
-    src.connect(dst);
-    if (onSrcEnded) src.onended = onSrcEnded;
-    src.start();
-  })
-  .catch(console.error);
+    .then(async () => await fetch(fPath))
+    .then(async (res: Response) => await res.arrayBuffer())
+    .then(async (buff: ArrayBuffer) => await ctx.decodeAudioData(buff))
+    .then(async (buff: AudioBuffer) => {
+      const src = ctx.createBufferSource();
+      src.buffer = buff;
+      src.connect(dst);
+      if (onSrcEnded) src.onended = onSrcEnded;
+      src.start();
+    })
+    .catch(console.error);
+}
+
+const _filterCodecs = async (sdp: string, codec: string) => {
+  const lines = sdp.split('\r\n');
+  const mLineIndex = lines.findIndex((line) => line.startsWith('m=audio'));
+
+  if (mLineIndex !== -1) {
+    const codecRegex = new RegExp(`^a=rtpmap:\\d+ ${codec}`, 'i');
+    const codecLines = lines.filter((line) => codecRegex.test(line));
+    if (codecLines.length > 0) {
+      const codecIds = codecLines.map((line) => line && line?.match(/^a=rtpmap:(\d+)/)[1]);
+      lines[mLineIndex] = lines[mLineIndex]
+        .split(' ')
+        .filter((item, index) => index === 0 || codecIds.includes(item))
+        .join(' ');
+    }
+  }
+
+  return lines.join('\r\n');
 }
 
 export interface Config {
@@ -34,7 +53,7 @@ export class SipService {
   public isRegistered = ref(false)
   public isInCall = ref(false)
   public autoAnswer = ref(false);
-  
+
 
   private config: Config | undefined;
 
@@ -52,9 +71,9 @@ export class SipService {
   public init(config: Config) {
     this.config = config;
     this.autoAnswer.value = config.autoAnswer;
-    
+
     const socket = new WebSocketInterface(config.websocketUrl)
-    
+
     const configuration = {
       sockets: [socket],
       uri: config.sipUri,
@@ -74,7 +93,24 @@ export class SipService {
 
     this.ua.on('newRTCSession', ({ session }) => {
       this.session = session as RTCSession;
-      
+
+      session.on('sdp', async (e: { sdp: string; originator: string; }) => {
+        if (e.originator === 'local') {
+          // let sdp = e.sdp;
+          // sdp = sdp.replace(/m=audio .*\r\n/g, (line) => {
+          //   const parts = line.split(' ');
+          //   return `m=audio ${parts[1]} ${parts[2]} 111\r\n`;
+          // });
+
+          // sdp = sdp.split('\n').filter(line => {
+          //   return !line.startsWith('a=rtpmap:') || line.includes('opus');
+          // }).join('\n');
+
+          // e.sdp = sdp;
+
+        }
+      });
+
       session.on('accepted', () => {
         this.isInCall.value = true;
 
@@ -82,12 +118,12 @@ export class SipService {
         session.connection?.getReceivers()?.forEach((receiver: any) => {
           if (receiver.track) remote.addTrack(receiver.track);
         });
-  
+
         const audioElm = new window.Audio();
         audioElm.srcObject = remote;
         audioElm.play().catch(console.error);
       })
-      
+
       session.on('ended', async () => {
         this.isInCall.value = false
         this.session = null
@@ -109,7 +145,7 @@ export class SipService {
       const header = `X-${k}: ${headers[k]}`;
       extraHeaders.push(header);
     });
-  
+
     const options = {
       extraHeaders,
       sessionTimersExpires: 120,
@@ -128,8 +164,8 @@ export class SipService {
 
     options.mediaStream = dst.stream;
 
-    this.ua.call(number, options);    
-  }   
+    this.ua.call(number, options);
+  }
 
   public hangup() {
     if (this.session) {

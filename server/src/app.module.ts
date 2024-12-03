@@ -5,6 +5,7 @@ import {ConfigModule, ConfigService} from "@nestjs/config";
 import {AllConfigType} from "@configs/config.type";
 import socketConfig from "@configs/socket.config";
 import {CallModule} from "@modules/call/call.module";
+import {CdrModule} from "@modules/cdr/cdr.module";
 
 @Module({
     imports: [
@@ -12,6 +13,7 @@ import {CallModule} from "@modules/call/call.module";
             isGlobal: true,
             load: [appConfig, socketConfig]
         }),
+        CdrModule,
         CallModule,
         SocketIoModule,
     ],

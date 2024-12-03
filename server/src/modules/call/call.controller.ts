@@ -1,5 +1,5 @@
-import {Body, Controller, Delete, Post} from "@nestjs/common";
-import {SocketIoStore} from "@modules/socketio/socketio.store";
+import {Body, Controller, Delete, Post} from '@nestjs/common';
+import {SocketIoStore} from '@modules/socketio/socketio.store';
 
 interface Response {
     success: boolean;
@@ -11,7 +11,7 @@ export class CallController {
 
     constructor(private readonly _socketStore: SocketIoStore) {
     }
-    
+
     @Post('incoming')
     async incomingCall(
         @Body('uuid') uuid: string,
