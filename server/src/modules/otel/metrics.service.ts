@@ -26,13 +26,13 @@ export class MetricsService {
         const readers: MetricReader[] = [];
         if (appConfig.prometheusURL?.length) {
             const { host, port: finalPort } = this._parseHostAndPort(appConfig.prometheusURL);
-            const reader = new PrometheusExporter({port,host,preventServerStart:false}, () => {
+            const reader = new PrometheusExporter({port,host,preventServerStart:true}, () => {
                 console.log(
                     `prometheus scrape endpoint: http://${host}:${finalPort}${endpoint}`,
                 );
             });
             readers.push(reader);
-            readers.push(new PrometheusExporter({port,preventServerStart:false}, () => {
+            readers.push(new PrometheusExporter({port,host:'0.0.0.0'}, () => {
                 console.log(
                     `local prometheus listen on: http://0.0.0.0:${finalPort}${endpoint}`,
                 );
