@@ -26,7 +26,7 @@ export class MetricsService {
         const readers: MetricReader[] = [];
         if (appConfig.prometheusURL?.length) {
             const { host, port: finalPort } = this._parseHostAndPort(appConfig.prometheusURL);
-            const reader = new PrometheusExporter({host, port: 6969}, () => {
+            const reader = new PrometheusExporter({host, port: port,preventServerStart:true}, () => {
                 console.log(
                     `prometheus scrape endpoint: http://${host}:${finalPort}${endpoint}`,
                 );
