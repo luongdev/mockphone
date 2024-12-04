@@ -88,24 +88,13 @@ export class MetricsService {
     }
 
     recordSuccessCall(callId: string | undefined) {
+        console.log('Call success: ', callId);
         this.callsCounter.add(1);
-        this.successCallsCounter.add(1, {callId});
+        this.successCallsCounter.add(1);
     }
 
     recordFailedCall(cause: string | undefined) {
         this.callsCounter.add(1);
         this.failedCallsCounter.add(1, {cause});
-    }
-
-    private _parseHostAndPort(url: string): { host: string; port: number | undefined } {
-        try {
-            const parsedUrl = new URL(url);
-            const host = parsedUrl.hostname;
-            const port = parsedUrl.port ? parseInt(parsedUrl.port) : undefined;
-            return { host, port };
-            // eslint-disable-next-line @typescript-eslint/no-unused-vars
-        } catch (error) {
-            throw new Error(`Invalid URL: ${url}`);
-        }
     }
 }
