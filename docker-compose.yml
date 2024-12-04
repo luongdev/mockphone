@@ -18,6 +18,6 @@ services:
     container_name: server
     ports:
       - "3333:3000"
-      - "9090:9090"
+      - "9464:9464"
     environment:
       - NODE_ENV=production
