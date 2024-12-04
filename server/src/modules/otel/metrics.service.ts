@@ -88,7 +88,7 @@ export class MetricsService {
     }
 
     recordSuccessCall(callId: string | undefined) {
-        this.callsCounter.add(1, {callId});
+        this.callsCounter.add(1);
         this.successCallsCounter.add(1, {callId});
     }
 
