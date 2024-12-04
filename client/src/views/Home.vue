@@ -40,9 +40,11 @@ import { ref, inject, onMounted } from "vue";
 import { SocketServiceKey } from "../services/injector";
 import { SocketService } from "../services/socket";
 
+const isProd = import.meta.env.PROD;
+
 const socketService = inject<SocketService>(SocketServiceKey, (null as unknown as SocketService));
 onMounted(async () => {
-  socketService.init('http://localhost:3000');
+  socketService.init(isProd ? '' : 'http://localhost:3000');
 });
 
 const phoneNumber = ref<string>("");

@@ -18,14 +18,13 @@ interface FormErrors {
 }
 
 const domains = ref<Domain[]>([
+  { id:'voice.metechvn.com', name: 'voice.metechvn.com' },
   { id:'mock.metechvn.com' , name: 'mock.metechvn.com' },
   { id:'pjico.metechvn.com' , name: 'pjico.metechvn.com' },
-  { id:'voice.metechvn.com', name: 'voice.metechvn.com' },
-  { id:'voiceuat.metechvn.com', name: 'voiceuat.metechvn.com' },
 ])
 
 const formData = ref<FormData>({
-  proxy: 'wss://proxy-dev.metechvn.com:7443',
+  proxy: 'ws://101.99.20.62:7080',
   username: '1000',
   domain: domains.value[0].name,
   password: 'Abcd@54321',

@@ -14,8 +14,8 @@ export class CdrController {
 
     @Post('json')
     json(@Body() body: CDRBody) {
-        const { variables, app_log } = body;
-        if (!app_log || !variables) return { success: false };
+        const {variables, app_log} = body;
+        if (!app_log || !variables) return {success: false};
 
         const cause = variables.hangup_cause || 'NONE';
         const callId = variables.uuid;
@@ -39,6 +39,6 @@ export class CdrController {
             }
         }
 
-        return { success: true };
+        return {success: true};
     }
 }

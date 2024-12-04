@@ -1,9 +1,17 @@
-import { Injectable } from '@nestjs/common';
-import { Meter } from '@opentelemetry/api';
-import { MeterProvider, ExplicitBucketHistogramAggregation, View } from '@opentelemetry/sdk-metrics';
-import { PrometheusExporter } from '@opentelemetry/exporter-prometheus';
+import {Injectable} from '@nestjs/common';
+import {Meter} from '@opentelemetry/api';
+import {
+    MeterProvider,
+    ExplicitBucketHistogramAggregation,
+    View,
+    MetricReader,
+    PeriodicExportingMetricReader
+} from '@opentelemetry/sdk-metrics';
+import {PrometheusExporter} from '@opentelemetry/exporter-prometheus';
+import {AppConfig} from "@configs/app.config";
+import {OTLPMetricExporter} from '@opentelemetry/exporter-metrics-otlp-proto';
 
-const { endpoint, port } = PrometheusExporter.DEFAULT_OPTIONS;
+const {endpoint,port} = PrometheusExporter.DEFAULT_OPTIONS;
 
 @Injectable()
 export class MetricsService {
@@ -14,12 +22,25 @@ export class MetricsService {
     private successCallsCounter;
     private failedCallsCounter;
 
-    constructor() {
-        const exporter = new PrometheusExporter({}, () => {
-            console.log(
-                `prometheus scrape endpoint: http://localhost:${port}${endpoint}`,
-            );
-        });
+    constructor(appConfig: AppConfig) {
+        const readers: MetricReader[] = [];
+        if (appConfig.prometheusURL?.length) {
+            const { host, port: finalPort } = this._parseHostAndPort(appConfig.prometheusURL);
+            const reader = new PrometheusExporter({host, port: 6969}, () => {
+                console.log(
+                    `prometheus scrape endpoint: http://${host}:${finalPort}${endpoint}`,
+                );
+            });
+            readers.push(reader);
+        }
+
+        if (appConfig.otelCollectorURL?.length) {
+            const reader = new PeriodicExportingMetricReader({
+                exporter: new OTLPMetricExporter({url: appConfig.otelCollectorURL}),
+                exportIntervalMillis: 5000,
+            });
+            readers.push(reader);
+        }
 
         const connectView = new View({
             aggregation: new ExplicitBucketHistogramAggregation([500, 1000, 5000]),
@@ -30,7 +51,9 @@ export class MetricsService {
             instrumentUnit: 'wait_ms',
         })
 
-        const meterProvider = new MeterProvider({ readers: [exporter], views: [connectView, waitView] });
+        const meterProvider = new MeterProvider({
+            readers, views: [connectView, waitView]
+        });
         this.meter = meterProvider.getMeter('call-metrics');
 
 
@@ -59,20 +82,32 @@ export class MetricsService {
     }
 
     recordConnectTime(timeInMillis: number, callId: string) {
-        this.connectTimeHistogram.record(timeInMillis, { callId });
+        this.connectTimeHistogram.record(timeInMillis, {callId});
     }
 
     recordWaitTime(timeInMillis: number, callId: string) {
-        this.waitTimeHistogram.record(timeInMillis, { callId });
+        this.waitTimeHistogram.record(timeInMillis, {callId});
     }
 
     recordSuccessCall(callId: string | undefined) {
-        this.callsCounter.add(1, { callId });
-        this.successCallsCounter.add(1, { callId });
+        this.callsCounter.add(1, {callId});
+        this.successCallsCounter.add(1, {callId});
     }
 
     recordFailedCall(cause: string | undefined) {
         this.callsCounter.add(1);
-        this.failedCallsCounter.add(1, { cause });
+        this.failedCallsCounter.add(1, {cause});
+    }
+
+    private _parseHostAndPort(url: string): { host: string; port: number | undefined } {
+        try {
+            const parsedUrl = new URL(url);
+            const host = parsedUrl.hostname;
+            const port = parsedUrl.port ? parseInt(parsedUrl.port) : undefined;
+            return { host, port };
+            // eslint-disable-next-line @typescript-eslint/no-unused-vars
+        } catch (error) {
+            throw new Error(`Invalid URL: ${url}`);
+        }
     }
 }

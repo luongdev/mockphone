@@ -1,0 +1,5 @@
+{
+  "dependencies": {
+    "@opentelemetry/exporter-metrics-otlp-proto": "^0.55.0"
+  }
+}
