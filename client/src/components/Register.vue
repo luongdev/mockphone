@@ -28,7 +28,7 @@ const formData = ref<FormData>({
   username: '1000',
   domain: domains.value[0].name,
   password: 'Abcd@54321',
-  autoAnswer: false,
+  autoAnswer: true,
 })
 
 const errors = ref<FormErrors>({
