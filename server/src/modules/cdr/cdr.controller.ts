@@ -26,14 +26,14 @@ export class CdrController {
 
         const waitTime = answerUepoch ? answerUepoch - startUepoch : endUepoch - startUepoch;
 
-        this._metricsService.recordWaitTime(Math.floor(waitTime / 1000), callId);
+        this._metricsService.recordWaitTime(Math.floor(waitTime / 1000));
 
         if (variables && variables.hangup_cause !== 'NORMAL_CLEARING') {
             this._metricsService.recordFailedCall(variables.hangup_cause);
         } else {
             if (offerUepoch && answerUepoch) {
                 this._metricsService.recordSuccessCall(callId);
-                this._metricsService.recordConnectTime(Math.floor(answerUepoch / 1000 - offerUepoch), callId);
+                this._metricsService.recordConnectTime(Math.floor(answerUepoch / 1000 - offerUepoch));
             } else {
                 this._metricsService.recordFailedCall(cause);
             }

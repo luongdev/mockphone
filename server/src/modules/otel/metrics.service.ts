@@ -76,15 +76,14 @@ export class MetricsService {
         this.failedCallsCounter = this.meter.createCounter('failed_calls', {
             description: 'Total number of failed calls by error code',
         });
-
     }
 
-    recordConnectTime(timeInMillis: number, callId: string) {
-        this.connectTimeHistogram.record(timeInMillis, {callId});
+    recordConnectTime(timeInMillis: number) {
+        this.connectTimeHistogram.record(timeInMillis);
     }
 
-    recordWaitTime(timeInMillis: number, callId: string) {
-        this.waitTimeHistogram.record(timeInMillis, {callId});
+    recordWaitTime(timeInMillis: number) {
+        this.waitTimeHistogram.record(timeInMillis);
     }
 
     recordSuccessCall(callId: string | undefined) {
