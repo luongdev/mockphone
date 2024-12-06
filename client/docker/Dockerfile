@@ -12,7 +12,7 @@ FROM nginx:latest
 
 COPY --from=builder /app/dist /usr/share/nginx/html
 COPY ./docker/nginx.conf /etc/nginx/nginx.conf
-COPY ./docker/proxy.conf /etc/nginx/conf.d/proxy.conf
+COPY ./docker/proxy.conf /etc/nginx/conf.d/default.conf
 
 EXPOSE 80
 
