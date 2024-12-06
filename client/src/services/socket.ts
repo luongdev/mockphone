@@ -8,13 +8,14 @@ import { useRouter } from 'vue-router';
 export class SocketService {
   private socket: Socket | null = null
   public isConnected = ref(false)
-  public notifications = ref<string[]>([])
 
   private _router: any;
 
   constructor(private readonly _sipService: SipService) { }
 
   public init(serverUrl: string) {
+    if (this.isConnected.value) { return; }
+
     const agent = this._sipService.getAgent();
     this.socket = io(serverUrl, {
       path: '/ws',
@@ -38,9 +39,9 @@ export class SocketService {
       console.log('Socket open');
     });
 
-    this.socket.io.on('ping', () => {
-      console.log('Socket ping', new Date());
-    });
+    // this.socket.io.on('ping', () => {
+    //   console.log('Socket ping', new Date());
+    // });
 
     this.socket.io.on('reconnect', (attempt: number) => {
       console.log('Socket reconnect: ', attempt);
