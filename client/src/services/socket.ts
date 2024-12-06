@@ -35,9 +35,9 @@ export class SocketService {
       transports: ['websocket', 'polling'],
     });
 
-    this.socket.io.on('open', () => {
-      console.log('Socket open');
-    });
+    // this.socket.io.on('open', () => {
+    //   console.log('Socket open');
+    // });
 
     // this.socket.io.on('ping', () => {
     //   console.log('Socket ping', new Date());

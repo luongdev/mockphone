@@ -19,7 +19,6 @@ watch(sipService.isRegistered, async () => {
 
 const handleSubmit = (data: FormData) => {
   const sipUri = new URI('sip', data.username, data.domain);
-  console.log(data);
   sipService?.init({
     sipUri: sipUri.toString(),
     password: data.password,
