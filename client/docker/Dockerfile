@@ -11,7 +11,8 @@ RUN npm run build
 FROM nginx:latest
 
 COPY --from=builder /app/dist /usr/share/nginx/html
-COPY ./docker/nginx.conf /etc/nginx/conf.d/default.conf
+COPY ./docker/nginx.conf /etc/nginx/nginx.conf
+COPY ./docker/proxy.conf /etc/nginx/conf.d/proxy.conf
 
 EXPOSE 80
 
