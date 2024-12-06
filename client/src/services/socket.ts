@@ -51,18 +51,19 @@ export class SocketService {
 
 
     this.socket.on('connect', () => {
-      this.isConnected.value = true
-      console.log('socket connected');
-    })
+      this.isConnected.value = true;
+      // console.log('socket connected');
+    });
 
     this.socket.on('connect_error', (err) => {
       console.log('Socket connect_error: ' + err.message, new Date());
     });
 
-    this.socket.on('disconnect', () => {
+    this.socket.on('disconnect', (reason: string, description?: any) => {
       this.isConnected.value = false;
-      console.log('socket disconnected');
-    })
+      console.log(`socket disconnected: ${reason}`, description?.message?.length ?? JSON.stringify(description));
+    });
+
 
     this.socket.on('INCOMING_CALL', async (data: any, metadata: any, ack: Function) => {
       const {
