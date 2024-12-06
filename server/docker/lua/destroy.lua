@@ -3,8 +3,7 @@ local hup_cause = event:getHeader('Hangup-Cause') or 'NORMAL_CLEARING';
 
 if string.sub(cname, 1, 7) == 'pickup/' and hup_cause ~= 'NORMAL_CLEARING' then
   require 'base.curl';
-  local api = freeswitch.API();
-  
+
   local uuid = event:getHeader('Unique-ID');
   local global_call_id = event:getHeader('variable_global_call_id') or '';
   local user = event:getHeader('variable_dialed_user') or '';

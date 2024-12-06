@@ -17,6 +17,8 @@ export class CdrController {
         const {variables, app_log} = body;
         if (!app_log || !variables) return {success: false};
 
+        console.log('CDR', JSON.stringify(body));
+
         const cause = variables.hangup_cause || 'NONE';
         const callId = variables.uuid;
         const startUepoch = (parseInt(variables.start_uepoch, 10) || 0);
@@ -28,10 +30,12 @@ export class CdrController {
 
         this._metricsService.recordWaitTime(Math.floor(waitTime / 1000));
 
+        let offerTimes = 0;
         if (variables && variables.hangup_cause !== 'NORMAL_CLEARING') {
             this._metricsService.recordFailedCall(variables.hangup_cause);
         } else {
             if (offerUepoch && answerUepoch) {
+                offerTimes = 1;
                 this._metricsService.recordSuccessCall(callId);
                 this._metricsService.recordConnectTime(Math.floor(answerUepoch / 1000 - offerUepoch));
             } else {
@@ -39,6 +43,9 @@ export class CdrController {
             }
         }
 
-        return {success: true};
+        offerTimes += variables.cc_failed_agents?.length ? variables.cc_failed_agents.split('|').length : 0;
+        this._metricsService.recordOfferTimes(offerTimes);
+
+        return { success: true };
     }
 }

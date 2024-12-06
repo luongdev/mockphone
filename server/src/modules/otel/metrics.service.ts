@@ -22,6 +22,8 @@ export class MetricsService {
     private successCallsCounter;
     private failedCallsCounter;
 
+    private offerTimesHistogram;
+
     constructor(appConfig: AppConfig) {
         const readers: MetricReader[] = [];
         if (appConfig.prometheusURL?.length) {
@@ -43,14 +45,18 @@ export class MetricsService {
         const connectView = new View({
             aggregation: new ExplicitBucketHistogramAggregation([500, 1000, 5000]),
             instrumentUnit: 'connect_ms',
-        })
+        });
         const waitView = new View({
             aggregation: new ExplicitBucketHistogramAggregation([1000, 10000, 30000]),
             instrumentUnit: 'wait_ms',
-        })
+        });
+        const offerView = new View({
+            aggregation: new ExplicitBucketHistogramAggregation([1, 2, 3]),
+            instrumentUnit: 'offer_times',
+        });
 
         const meterProvider = new MeterProvider({
-            readers, views: [connectView, waitView]
+            readers, views: [connectView, waitView, offerView]
         });
         this.meter = meterProvider.getMeter('call-metrics');
 
@@ -63,6 +69,11 @@ export class MetricsService {
         this.waitTimeHistogram = this.meter.createHistogram('wait_time', {
             description: 'Wait time in milliseconds',
             unit: 'wait_ms',
+        });
+
+        this.offerTimesHistogram = this.meter.createHistogram('offer_times', {
+            description: 'Offer count times',
+            unit: 'offer_times',
         });
 
         this.callsCounter = this.meter.createCounter('calls_total', {
@@ -80,6 +91,10 @@ export class MetricsService {
 
     recordConnectTime(timeInMillis: number) {
         this.connectTimeHistogram.record(timeInMillis);
+    }
+
+    recordOfferTimes(num: number) {
+        this.offerTimesHistogram.record(num);
     }
 
     recordWaitTime(timeInMillis: number) {
